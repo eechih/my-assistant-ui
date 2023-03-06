@@ -184,8 +184,8 @@ export default function Index(props: { posts: Post[] }) {
   }
 
   return (
-    <Layout>
-      <Box sx={{ width: '100%' }}>
+    <Layout maxWidth="xs">
+      <Box sx={{ width: '400' }}>
         <Breadcrumbs
           breadcrumbs={[{ label: '首頁', href: '/' }, { label: '貼文' }]}
         />

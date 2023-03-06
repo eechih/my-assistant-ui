@@ -8,6 +8,24 @@ export default class ProductsAPI<T extends Product> extends BaseAPI {
     super(endpoint)
   }
 
+  async listProducts(props: {
+    limit?: number
+    order?: 'asc' | 'desc'
+  }): Promise<T[]> {
+    console.log('listProducts', props)
+    const { limit = 10, order = 'desc' } = props
+    try {
+      const res = await this.axiosInstance.request({
+        url: `/products?limit=${limit}&order=${order}`,
+        method: 'get',
+      })
+      return res.data.items as T[]
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }
+
   async createProduct(props: { product: T }): Promise<T> {
     console.log('ProductsApi.createProduct', props)
     const { product } = props

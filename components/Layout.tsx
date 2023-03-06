@@ -2,12 +2,13 @@ import Container from '@mui/material/Container'
 
 interface LayoutProps {
   children: React.ReactNode
+  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ children, maxWidth = 'xl' }: LayoutProps) => {
   return (
     <>
-      <Container maxWidth="sm" sx={{ padding: 0 }}>
+      <Container maxWidth={maxWidth} sx={{ padding: 0 }}>
         {children}
       </Container>
     </>
