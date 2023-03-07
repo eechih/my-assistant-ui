@@ -12,18 +12,20 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
 import Link from 'next/link'
-import * as React from 'react'
 import * as R from 'ramda'
+import * as React from 'react'
 
 import Breadcrumbs from 'components/Breadcrumbs'
 import Layout from 'components/Layout'
 import RefreshIconButton from 'components/RefreshIconButton'
-import ProductAPI from 'lib/productApi'
+import CrawlerAPI from 'lib/crawlerApi'
 import { Product } from 'lib/models'
+import ProductAPI from 'lib/productApi'
 import moment from 'moment'
 import { formatTime } from 'pages/util'
 
 const productAPI = new ProductAPI()
+const crawlerAPI = new CrawlerAPI()
 
 const demo: Product[] = [
   {
@@ -41,31 +43,28 @@ const demo: Product[] = [
 ]
 
 export default function Index() {
-  const [products, setProducts] = React.useState<Product[]>(demo)
+  const [products, setProducts] = React.useState<Product[]>()
   const [loading, setLoading] = React.useState<boolean>()
   const [loadedTime, setLoadedTime] = React.useState<string>()
   const [checked, setChecked] = React.useState<string[]>([])
 
-  // React.useEffect(() => {
-  //   console.log('useEffect')
-  //   // Using an IIFE
-  //   ;(async function listCrawlers() {
-  //     const products = await productAPI.listProducts({ limit: 10 })
-  //     setProducts(products)
-  //     setLoadedTime(formatTime(moment()))
-  //     setLoading(false)
-  //   })()
-  // }, [])
+  const listProducts = async () => {
+    const products = await productAPI.listProducts({ limit: 10 })
+    setProducts(products)
+    setLoadedTime(formatTime(moment()))
+    setLoading(false)
+  }
+
+  React.useEffect(() => {
+    console.log('useEffect')
+    // Using an IIFE
+    listProducts()
+  }, [])
 
   const handleRefreshButtonClick = async () => {
     console.log('handleRefreshButtonClick')
     setLoading(true)
-    const products = await productAPI.listProducts({ limit: 10 })
-    if (products) {
-      setProducts(products)
-      setLoadedTime(formatTime(moment()))
-    }
-    setLoading(false)
+    listProducts()
   }
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,6 +76,24 @@ export default function Index() {
         setChecked(R.reject((v) => v === event.target.name, checked))
       }
     }
+  }
+
+  const publishProduct = async (product: Product) => {
+    console.log('publishProduct')
+    crawlerAPI.createCrawler({
+      crawlerName: 'BuyPlusOne',
+      params: {
+        name: product.name,
+        price: product.price,
+        cost: product.cost,
+        option: product.option,
+        description: product.description,
+        location: product.location,
+        images: product.images,
+        statusDate: product.statusDate,
+        status: product.status,
+      },
+    })
   }
 
   return (
@@ -134,7 +151,7 @@ export default function Index() {
                     <TableCell style={{ minWidth: 40 }}>
                       <Checkbox color="primary" disabled />
                     </TableCell>
-                    <TableCell style={{ minWidth: 60 }}>編號</TableCell>
+                    <TableCell style={{ minWidth: 60 }}>商品ID</TableCell>
                     <TableCell style={{ minWidth: 400 }}>名稱</TableCell>
                     <TableCell style={{ minWidth: 80 }}>價格</TableCell>
                     <TableCell style={{ minWidth: 80 }}>廠商</TableCell>
@@ -190,7 +207,13 @@ export default function Index() {
                           <Button variant="text" disabled={!!buyPlusOneId}>
                             {!buyPlusOneId ? '上架' : '已上架'}
                           </Button>
-                          <Button variant="text" disabled={!!postId}>
+                          <Button
+                            variant="text"
+                            disabled={!!postId}
+                            onClick={() => {
+                              publishProduct(product)
+                            }}
+                          >
                             {!postId ? '發布' : '已發布'}
                           </Button>
                         </TableCell>

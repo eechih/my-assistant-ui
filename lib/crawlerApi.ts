@@ -39,17 +39,21 @@ export default class CrawlerApi<T extends Crawler> extends BaseAPI {
     }
   }
 
-  async createCrawler(props: { groupId: string; limit: number }): Promise<T> {
+  async createCrawler(props: {
+    crawlerName: string
+    params: Record<
+      string,
+      boolean | number | string | string[] | string[] | undefined
+    >
+  }): Promise<T> {
     console.log('createCrawler', props)
-    const { groupId, limit } = props
+    const { crawlerName, params } = props
     try {
       const res = await this.axiosInstance.request<T>({
         url: `/crawlers`,
         method: 'post',
-        data: {
-          groupId: groupId,
-          limit: limit,
-        },
+        params: { crawlerName },
+        data: params,
       })
       return res.data
     } catch (err) {

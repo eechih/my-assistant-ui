@@ -45,8 +45,11 @@ export default function Index() {
   const handleCreateButtonClick = async () => {
     console.log('handleCreateButtonClick')
     const crawler = await crawlerApi.createCrawler({
-      groupId: '1627303077535381',
-      limit: 20,
+      crawlerName: 'Facebook',
+      params: {
+        groupId: '1627303077535381',
+        limit: 20,
+      },
     })
     if (crawler) {
       if (crawlers) setCrawlers([crawler, ...crawlers])
