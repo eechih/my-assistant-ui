@@ -25,22 +25,37 @@ import { formatTime } from 'pages/util'
 
 const productAPI = new ProductAPI()
 
+const demo: Product[] = [
+  {
+    name: 'test',
+  },
+  {
+    name: 'test2',
+    buyPlusOneId: '1',
+  },
+  {
+    name: 'test3',
+    buyPlusOneId: '1',
+    postId: '2',
+  },
+]
+
 export default function Index() {
-  const [products, setProducts] = React.useState<Product[]>()
+  const [products, setProducts] = React.useState<Product[]>(demo)
   const [loading, setLoading] = React.useState<boolean>()
   const [loadedTime, setLoadedTime] = React.useState<string>()
   const [checked, setChecked] = React.useState<string[]>([])
 
-  React.useEffect(() => {
-    console.log('useEffect')
-    // Using an IIFE
-    ;(async function listCrawlers() {
-      const products = await productAPI.listProducts({ limit: 10 })
-      setProducts(products)
-      setLoadedTime(formatTime(moment()))
-      setLoading(false)
-    })()
-  }, [])
+  // React.useEffect(() => {
+  //   console.log('useEffect')
+  //   // Using an IIFE
+  //   ;(async function listCrawlers() {
+  //     const products = await productAPI.listProducts({ limit: 10 })
+  //     setProducts(products)
+  //     setLoadedTime(formatTime(moment()))
+  //     setLoading(false)
+  //   })()
+  // }, [])
 
   const handleRefreshButtonClick = async () => {
     console.log('handleRefreshButtonClick')
@@ -124,8 +139,8 @@ export default function Index() {
                     <TableCell style={{ minWidth: 80 }}>價格</TableCell>
                     <TableCell style={{ minWidth: 80 }}>廠商</TableCell>
                     <TableCell style={{ minWidth: 80 }}>成本</TableCell>
-                    <TableCell style={{ minWidth: 180 }}>下架時間</TableCell>
-                    <TableCell style={{ minWidth: 80 }}>發布FB</TableCell>
+                    <TableCell style={{ minWidth: 80 }}>關團時間</TableCell>
+                    <TableCell style={{ minWidth: 80 }}>動作</TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -139,7 +154,8 @@ export default function Index() {
                       option,
                       location,
                       statusDate,
-                      publishUrl,
+                      buyPlusOneId,
+                      postId,
                     } = product
                     return (
                       <TableRow
@@ -153,7 +169,6 @@ export default function Index() {
                             name={productId}
                             color="primary"
                             onChange={handleCheckboxChange}
-                            disabled={!!publishUrl}
                           />
                         </TableCell>
                         <TableCell>
@@ -172,7 +187,12 @@ export default function Index() {
                         <TableCell>{cost}</TableCell>
                         <TableCell>{formatTime(statusDate)}</TableCell>
                         <TableCell>
-                          {publishUrl ? '已發布' : '未發布'}
+                          <Button variant="text" disabled={!!buyPlusOneId}>
+                            {!buyPlusOneId ? '上架' : '已上架'}
+                          </Button>
+                          <Button variant="text" disabled={!!postId}>
+                            {!postId ? '發布' : '已發布'}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     )

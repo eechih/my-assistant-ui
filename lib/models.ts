@@ -44,5 +44,6 @@ export interface Product {
   statusDate?: string // ISO 8601
   status?: number
   creationTime?: string // ISO 8601
-  publishUrl?: string
+  buyPlusOneId?: string
+  postId?: string
 }

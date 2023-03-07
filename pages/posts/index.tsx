@@ -78,20 +78,17 @@ export default function Index(props: { posts: Post[] }) {
   ): Promise<void> => {
     setProgressing(true)
     try {
-      const { productId } = await productApi.createProduct({ product: {} })
+      const product = convertToProduct({ post })
+      const { productId } = await productApi.createProduct({ product })
       console.log('productId', productId)
-      post.productId = productId
-      if (post.productId) {
-        const product = convertToProduct({ post })
-        console.log('product', product)
-        await productApi.updateProduct({ product })
+      if (productId) {
         await postApi.patchPost({
           postId: post.postId,
-          patches: [{ op: 'add', path: '/productId', value: post.productId }],
+          patches: [{ op: 'add', path: '/productId', value: productId }],
         })
         dispatch({
           type: 'update',
-          payload: { ...post, productId: post.productId },
+          payload: { ...post, productId: productId },
         })
         console.log('上架成功')
       }
@@ -123,43 +120,6 @@ export default function Index(props: { posts: Post[] }) {
       setTextDialogOpen(true)
       setCurrentPost(state.posts[postId])
     }
-  }
-
-  const onPublishButtonClick: OnPublishButtonClickFunc = async (props: {
-    productId: string
-    postId: string
-  }): Promise<void> => {
-    console.log('onPublishButtonClick', props)
-    const { productId, postId } = props
-    setProgressing(true)
-    try {
-      const product = await productApi.publishToFB({ productId })
-      console.log('product', product)
-      if (product.publishUrl) {
-        console.log('product', product)
-        await postApi.patchPost({
-          postId: postId,
-          patches: [
-            {
-              op: 'add',
-              path: '/productPublishUrl',
-              value: product.publishUrl,
-            },
-          ],
-        })
-        dispatch({
-          type: 'update',
-          payload: {
-            ...state.posts[postId],
-            productPublishUrl: product.publishUrl,
-          },
-        })
-        console.log('發布成功')
-      }
-    } catch (error) {
-      console.log(error)
-    }
-    setProgressing(false)
   }
 
   const savePost = async (post: Post) => {
@@ -195,7 +155,6 @@ export default function Index(props: { posts: Post[] }) {
               <PostItem
                 post={post}
                 onCreateProductButtonClick={onCreateProductButtonClick}
-                onPublishButtonClick={onPublishButtonClick}
                 onEditButtonClick={onEditButtonClick}
                 onOriginPostButtonClick={onOriginPostButtonClick}
               />

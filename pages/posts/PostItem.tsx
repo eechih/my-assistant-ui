@@ -7,7 +7,6 @@ import Grid from '@mui/material/Grid'
 import Image from 'next/image'
 
 import AddBoxIcon from '@mui/icons-material/AddBox'
-import AddToHomeScreenIcon from '@mui/icons-material/AddToHomeScreen'
 import IconButton from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
@@ -17,6 +16,7 @@ import TextAccordion from 'components/TextAccordion'
 import { Post } from 'lib/models'
 import React from 'react'
 import { convertToProduct } from './util'
+import { formatTime } from 'pages/util'
 
 export interface OnCreateProductButtonClickFunc {
   (post: Post): void
@@ -37,14 +37,12 @@ export interface OnOriginPostButtonClickFunc {
 export default function PostItem(props: {
   post: Post
   onCreateProductButtonClick: OnCreateProductButtonClickFunc
-  onPublishButtonClick: OnPublishButtonClickFunc
   onEditButtonClick: OnEditButtonClickFunc
   onOriginPostButtonClick: OnOriginPostButtonClickFunc
 }) {
   const {
     post,
     onCreateProductButtonClick,
-    onPublishButtonClick,
     onEditButtonClick,
     onOriginPostButtonClick,
   } = props
@@ -62,10 +60,18 @@ export default function PostItem(props: {
     <>
       <Grid container spacing={0}>
         <Grid item xs={11}>
-          <Stack direction="row" spacing={1}>
-            <Chip label={post.groupName} />
-            <Chip label={post.postCreationTime} variant="outlined" />
-            <Chip label={`成本：${post.productCost}`} variant="outlined" />
+          <Stack direction="row" spacing={1} sx={{ m: 1 }}>
+            <Chip size="small" label={post.groupName} />
+            <Chip
+              size="small"
+              label={formatTime(post.postCreationTime)}
+              variant="outlined"
+            />
+            <Chip
+              size="small"
+              label={`成本：${post.productCost}`}
+              variant="outlined"
+            />
           </Stack>
         </Grid>
         <Grid item xs={1}>
@@ -179,28 +185,6 @@ export default function PostItem(props: {
             onClick={() => onCreateProductButtonClick(post)}
           >
             上架
-          </Button>
-        )}
-        {post.productPublishUrl ? (
-          <Chip
-            color="success"
-            size="small"
-            icon={<AddToHomeScreenIcon />}
-            label="已發布"
-          />
-        ) : (
-          <Button
-            color="inherit"
-            startIcon={<AddToHomeScreenIcon />}
-            disabled={!post.productId}
-            onClick={() =>
-              onPublishButtonClick({
-                productId: post.productId ?? '',
-                postId: post.postId,
-              })
-            }
-          >
-            發布
           </Button>
         )}
       </Stack>

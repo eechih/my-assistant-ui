@@ -35,6 +35,7 @@ export default class ProductsAPI<T extends Product> extends BaseAPI {
       data: product,
       params: { phpsessId: phpsessId },
     })
+    console.log('res.data', res.data)
     return res.data
   }
 

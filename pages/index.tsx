@@ -12,10 +12,16 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-        <h1 className="title">
-          <Link href="/crawlers">爬蟲</Link>
+        <h1 className="title"></h1>
+        <div>
+          <Link href="/crawlers">爬蟲管理</Link>
+        </div>
+        <div>
           <Link href="/posts">貼文</Link>
-        </h1>
+        </div>
+        <div>
+          <Link href="/products">商品管理</Link>
+        </div>
       </main>
     </>
   )
