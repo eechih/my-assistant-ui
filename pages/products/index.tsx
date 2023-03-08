@@ -83,6 +83,7 @@ export default function Index() {
     crawlerAPI.createCrawler({
       crawlerName: 'BuyPlusOne',
       params: {
+        productId: product.productId,
         name: product.name,
         price: product.price,
         cost: product.cost,
@@ -158,6 +159,7 @@ export default function Index() {
                     <TableCell style={{ minWidth: 80 }}>廠商</TableCell>
                     <TableCell style={{ minWidth: 80 }}>成本</TableCell>
                     <TableCell style={{ minWidth: 80 }}>關團時間</TableCell>
+                    <TableCell style={{ minWidth: 80 }}>狀態</TableCell>
                     <TableCell style={{ minWidth: 80 }}>動作</TableCell>
                   </TableRow>
                 </TableHead>
@@ -169,10 +171,9 @@ export default function Index() {
                       name,
                       price,
                       cost,
-                      option,
                       location,
                       statusDate,
-                      buyPlusOneId,
+                      processing,
                       postId,
                     } = product
                     return (
@@ -204,10 +205,8 @@ export default function Index() {
                         <TableCell>{location}</TableCell>
                         <TableCell>{cost}</TableCell>
                         <TableCell>{formatTime(statusDate)}</TableCell>
+                        <TableCell>{processing ? '發布中' : '-'}</TableCell>
                         <TableCell>
-                          <Button variant="text" disabled={!!buyPlusOneId}>
-                            {!buyPlusOneId ? '上架' : '已上架'}
-                          </Button>
                           <Button
                             variant="text"
                             disabled={!!postId}
