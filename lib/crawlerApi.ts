@@ -43,7 +43,7 @@ export default class CrawlerApi<T extends Crawler> extends BaseAPI {
     crawlerName: string
     params: Record<
       string,
-      boolean | number | string | string[] | string[] | undefined
+      boolean | number | string | string[] | string[] | string[][] | undefined
     >
   }): Promise<T> {
     console.log('createCrawler', props)

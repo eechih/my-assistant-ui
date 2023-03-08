@@ -92,6 +92,7 @@ export default function Index() {
         images: product.images,
         statusDate: product.statusDate,
         status: product.status,
+        phpsessId: 'tbo311ajis0n5p9ni2re6l1t26',
       },
     })
   }
