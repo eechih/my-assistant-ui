@@ -19,7 +19,6 @@ import PostItem, {
   OnCreateProductButtonClickFunc,
   OnEditButtonClickFunc,
   OnOriginPostButtonClickFunc,
-  OnPublishButtonClickFunc,
 } from './PostItem'
 import TextDialog from './TextDialog'
 import { convertToProduct } from './util'
@@ -200,7 +199,7 @@ export const getStaticProps = async () => {
   const postApi = new PostAPI()
   const posts = await postApi.listPosts({
     groupId: '1627303077535381',
-    limit: 30,
+    limit: 20,
   })
   // const posts = await postsApi.listPostsMock();
   return {

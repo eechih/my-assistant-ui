@@ -33,7 +33,8 @@ export interface Post {
 }
 
 export interface Product {
-  productId?: string
+  userId: string
+  productId: string
   name?: string
   price?: number
   cost?: number
@@ -43,7 +44,9 @@ export interface Product {
   images?: string[]
   statusDate?: string // ISO 8601
   status?: number
-  creationTime?: string // ISO 8601
-  buyPlusOneId?: string
-  postId?: string
+  creationTime: string // ISO 8601
+  publishing?: boolean
+  publishedProductId?: string // Poduct ID for Buy+1
+  publishedPostId?: string // Post ID for Facebook
+  publishLog?: string
 }

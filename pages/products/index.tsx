@@ -1,3 +1,4 @@
+import LoadingButton from '@mui/lab/LoadingButton'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Checkbox from '@mui/material/Checkbox'
@@ -11,48 +12,36 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import * as R from 'ramda'
-import * as React from 'react'
-
 import Breadcrumbs from 'components/Breadcrumbs'
 import Layout from 'components/Layout'
 import RefreshIconButton from 'components/RefreshIconButton'
-import CrawlerAPI from 'lib/crawlerApi'
 import { Product } from 'lib/models'
 import ProductAPI from 'lib/productApi'
 import moment from 'moment'
+import Link from 'next/link'
 import { formatTime } from 'pages/util'
+import * as R from 'ramda'
+import * as React from 'react'
+
+import { useLoadingReducer } from 'hooks'
 
 const productAPI = new ProductAPI()
-const crawlerAPI = new CrawlerAPI()
-
-const demo: Product[] = [
-  {
-    name: 'test',
-  },
-  {
-    name: 'test2',
-    buyPlusOneId: '1',
-  },
-  {
-    name: 'test3',
-    buyPlusOneId: '1',
-    postId: '2',
-  },
-]
 
 export default function Index() {
-  const [products, setProducts] = React.useState<Product[]>()
-  const [loading, setLoading] = React.useState<boolean>()
-  const [loadedTime, setLoadedTime] = React.useState<string>()
+  const [products, setProducts] = React.useState<Product[]>([])
   const [checked, setChecked] = React.useState<string[]>([])
+  const [publising, setPublishing] = React.useState<boolean>(false)
+  const [loadingState, setLoadingState] = useLoadingReducer()
 
   const listProducts = async () => {
-    const products = await productAPI.listProducts({ limit: 10 })
-    setProducts(products)
-    setLoadedTime(formatTime(moment()))
-    setLoading(false)
+    try {
+      setLoadingState({ loading: true, error: null })
+      const products = await productAPI.listProducts({ limit: 10 })
+      setProducts(products)
+      setLoadingState({ loading: false, loaded: true, loadedTime: moment() })
+    } catch (err) {
+      setLoadingState({ loading: false, error: err as Error })
+    }
   }
 
   React.useEffect(() => {
@@ -63,7 +52,6 @@ export default function Index() {
 
   const handleRefreshButtonClick = async () => {
     console.log('handleRefreshButtonClick')
-    setLoading(true)
     listProducts()
   }
 
@@ -78,24 +66,27 @@ export default function Index() {
     }
   }
 
-  const publishProduct = async (product: Product) => {
-    console.log('publishProduct')
-    crawlerAPI.createCrawler({
-      crawlerName: 'BuyPlusOne',
-      params: {
-        productId: product.productId,
-        name: product.name,
-        price: product.price,
-        cost: product.cost,
-        option: product.option,
-        description: product.description,
-        location: product.location,
-        images: product.images,
-        statusDate: product.statusDate,
-        status: product.status,
+  const publishProduct = async (productId: string) => {
+    console.log('publishProduct', productId)
+    setPublishing(true)
+
+    try {
+      await productAPI.publishProduct({
+        productId,
         phpsessId: 'tbo311ajis0n5p9ni2re6l1t26',
-      },
-    })
+      })
+
+      const newProducts = products.map((product) => {
+        return product.productId == productId
+          ? { ...product, publishing: true }
+          : product
+      })
+
+      setProducts(newProducts)
+    } catch (err) {
+      console.error(err)
+    }
+    setPublishing(false)
   }
 
   return (
@@ -117,7 +108,7 @@ export default function Index() {
           <Stack direction="row" justifyContent="flex-end" spacing={2}>
             <RefreshIconButton
               onClick={handleRefreshButtonClick}
-              loading={loading}
+              loading={loadingState.loading}
             />
             <Button
               size="small"
@@ -158,8 +149,7 @@ export default function Index() {
                     <TableCell style={{ minWidth: 80 }}>價格</TableCell>
                     <TableCell style={{ minWidth: 80 }}>廠商</TableCell>
                     <TableCell style={{ minWidth: 80 }}>成本</TableCell>
-                    <TableCell style={{ minWidth: 80 }}>關團時間</TableCell>
-                    <TableCell style={{ minWidth: 80 }}>狀態</TableCell>
+                    <TableCell style={{ minWidth: 170 }}>下架時間</TableCell>
                     <TableCell style={{ minWidth: 80 }}>動作</TableCell>
                   </TableRow>
                 </TableHead>
@@ -173,8 +163,8 @@ export default function Index() {
                       cost,
                       location,
                       statusDate,
-                      processing,
-                      postId,
+                      publishing,
+                      publishedPostId,
                     } = product
                     return (
                       <TableRow
@@ -204,18 +194,20 @@ export default function Index() {
                         <TableCell>{price}</TableCell>
                         <TableCell>{location}</TableCell>
                         <TableCell>{cost}</TableCell>
-                        <TableCell>{formatTime(statusDate)}</TableCell>
-                        <TableCell>{processing ? '發布中' : '-'}</TableCell>
                         <TableCell>
-                          <Button
-                            variant="text"
-                            disabled={!!postId}
+                          {moment(statusDate).format('yyyy/MM/DD HH:mm')}
+                        </TableCell>
+                        <TableCell>
+                          <LoadingButton
+                            loading={publishing}
+                            variant={!!publishedPostId ? 'text' : 'contained'}
+                            disabled={!!publishedPostId}
                             onClick={() => {
-                              publishProduct(product)
+                              publishProduct(productId)
                             }}
                           >
-                            {!postId ? '發布' : '已發布'}
-                          </Button>
+                            {publishedPostId ? '已發佈' : '發佈'}
+                          </LoadingButton>
                         </TableCell>
                       </TableRow>
                     )
@@ -232,7 +224,7 @@ export default function Index() {
               資料取得時間
             </Typography>
             <Typography variant="caption" color="#9e9e9e">
-              {loadedTime}
+              {formatTime(loadingState.loadedTime)}
             </Typography>
           </Stack>
         </Stack>

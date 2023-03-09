@@ -1,9 +1,7 @@
 import BaseAPI from './baseApi'
 import { Product } from './models'
 
-const phpsessId = 'hj0rbuamo1i5ojfunkfcoej3k5'
-
-export default class ProductsAPI<T extends Product> extends BaseAPI {
+export default class ProductAPI<T extends Product> extends BaseAPI {
   constructor(endpoint?: string) {
     super(endpoint)
   }
@@ -12,7 +10,7 @@ export default class ProductsAPI<T extends Product> extends BaseAPI {
     limit?: number
     order?: 'asc' | 'desc'
   }): Promise<T[]> {
-    console.log('listProducts', props)
+    console.log('ProductAPI.listProducts', props)
     const { limit = 10, order = 'desc' } = props
     try {
       const res = await this.axiosInstance.request({
@@ -27,19 +25,19 @@ export default class ProductsAPI<T extends Product> extends BaseAPI {
   }
 
   async createProduct(props: { product: T }): Promise<T> {
-    console.log('ProductsApi.createProduct', props)
+    console.log('ProductAPI.createProduct', props)
     const { product } = props
     const res = await this.axiosInstance.request<T>({
       url: '/products',
       method: 'post',
       data: product,
-      params: { phpsessId: phpsessId },
     })
     console.log('res.data', res.data)
     return res.data
   }
 
   async getProduct(props: { productId: string }): Promise<T> {
+    console.log('ProductAPI.getProduct', props)
     const { productId } = props
     const res = await this.axiosInstance.request<T>({
       url: `/products/${productId}`,
@@ -48,27 +46,19 @@ export default class ProductsAPI<T extends Product> extends BaseAPI {
     return res.data
   }
 
-  async updateProduct(props: { product: Product }): Promise<T> {
-    console.log('ProductsApi.updateProduct', props)
-    const { product } = props
-    const { productId } = product
-    const res = await this.axiosInstance.request<T>({
-      url: `/products/${productId}`,
-      method: 'put',
-      data: product,
-      params: { phpsessId: phpsessId },
-    })
-    return res.data
-  }
-
-  async publishToFB(props: { productId: string }): Promise<T> {
-    console.log('ProductsApi.publishToFB', props)
-    const { productId } = props
+  async publishProduct(props: {
+    productId: string
+    phpsessId?: string
+  }): Promise<T> {
+    console.log('ProductAPI.publishProduct', props)
+    const { productId, phpsessId = 'hj0rbuamo1i5ojfunkfcoej3k5' } = props
     const res = await this.axiosInstance.request<T>({
       url: `/products/${productId}/publish`,
       method: 'put',
-      params: { phpsessId: phpsessId },
+      params: { phpsessId },
+      timeout: 60000, // 60 seconds
     })
+    console.log('Successfully published product.', res.data)
     return res.data
   }
 }
