@@ -12,26 +12,32 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
+import { compare } from 'fast-json-patch'
+import moment from 'moment'
+import Link from 'next/link'
+import { find, isEmpty, propEq, reject } from 'ramda'
+import { useEffect, useState } from 'react'
+
 import Breadcrumbs from 'components/Breadcrumbs'
 import Layout from 'components/Layout'
 import RefreshIconButton from 'components/RefreshIconButton'
+import { useLoadingReducer } from 'hooks'
 import { Product } from 'lib/models'
 import ProductAPI from 'lib/productApi'
-import moment from 'moment'
-import Link from 'next/link'
 import { formatTime } from 'pages/util'
-import * as R from 'ramda'
-import * as React from 'react'
-
-import { useLoadingReducer } from 'hooks'
+import ProductFormDialog from './ProductFormDialog'
+import ProductPublisherDialog from './ProductPublisherDialog'
 
 const productAPI = new ProductAPI()
 
 export default function Index() {
-  const [products, setProducts] = React.useState<Product[]>([])
-  const [checked, setChecked] = React.useState<string[]>([])
-  const [publising, setPublishing] = React.useState<boolean>(false)
   const [loadingState, setLoadingState] = useLoadingReducer()
+  const [products, setProducts] = useState<Product[]>([])
+  const [productToEdit, setProductToEdit] = useState<Product | null>(null)
+  const [checked, setChecked] = useState<string[]>([])
+  const [productsToPublish, setProductsToPublish] = useState<Product[] | null>(
+    null
+  )
 
   const listProducts = async () => {
     try {
@@ -44,9 +50,8 @@ export default function Index() {
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('useEffect')
-    // Using an IIFE
     listProducts()
   }, [])
 
@@ -58,22 +63,21 @@ export default function Index() {
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.name) {
       if (event.target.checked) {
-        if (!R.find((v) => v === event.target.name, checked))
+        if (!find((v) => v === event.target.name, checked))
           setChecked([...checked, event.target.name].sort())
       } else {
-        setChecked(R.reject((v) => v === event.target.name, checked))
+        setChecked(reject((v) => v === event.target.name, checked))
       }
     }
   }
 
   const publishProduct = async (productId: string) => {
     console.log('publishProduct', productId)
-    setPublishing(true)
 
     try {
       await productAPI.publishProduct({
         productId,
-        phpsessId: 'tbo311ajis0n5p9ni2re6l1t26',
+        phpsessId: 'hj0rbuamo1i5ojfunkfcoej3k5',
       })
 
       const newProducts = products.map((product) => {
@@ -86,7 +90,36 @@ export default function Index() {
     } catch (err) {
       console.error(err)
     }
-    setPublishing(false)
+  }
+
+  const updateProduct = async (productToUpdate: Product) => {
+    console.log('updateProduct', productToUpdate)
+    const { productId } = productToUpdate
+    try {
+      const product = find(propEq('productId', productId))(products) as Product
+      if (!product) throw new Error('Product not found.')
+      const patches = compare(product, productToUpdate)
+      console.log('patches', patches)
+      if (isEmpty(patches)) {
+        console.log('No any changed.')
+        setProductToEdit(null)
+        return
+      }
+      const patchedProduct = await productAPI.patchProduct({
+        productId,
+        patches,
+      })
+      setProducts(
+        products.map((product) =>
+          product.productId == productId ? patchedProduct : product
+        )
+      )
+      console.log('儲存成功')
+      setProductToEdit(null)
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }
 
   return (
@@ -119,6 +152,20 @@ export default function Index() {
             >
               建立商品
             </Button>
+            <Button
+              disabled={!checked || checked.length == 0}
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                console.log('createProduct')
+                const checkedProducts = products.filter(({ productId }) => {
+                  return checked.includes(productId)
+                })
+                setProductsToPublish(checkedProducts)
+              }}
+            >
+              發佈商品
+            </Button>
           </Stack>
         </Stack>
 
@@ -150,7 +197,8 @@ export default function Index() {
                     <TableCell style={{ minWidth: 80 }}>廠商</TableCell>
                     <TableCell style={{ minWidth: 80 }}>成本</TableCell>
                     <TableCell style={{ minWidth: 170 }}>下架時間</TableCell>
-                    <TableCell style={{ minWidth: 80 }}>動作</TableCell>
+                    <TableCell style={{ minWidth: 80 }}>狀態</TableCell>
+                    <TableCell style={{ minWidth: 80 }}></TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -186,7 +234,7 @@ export default function Index() {
                               variant="body2"
                               sx={{ color: '#1976d2' }}
                             >
-                              {productId}
+                              {productId.substring(0, 8)}
                             </Typography>
                           </Link>
                         </TableCell>
@@ -198,6 +246,12 @@ export default function Index() {
                           {moment(statusDate).format('yyyy/MM/DD HH:mm')}
                         </TableCell>
                         <TableCell>
+                          {publishedPostId ? '已發佈' : '未發佈'}
+                        </TableCell>
+                        <TableCell>
+                          <Button onClick={() => setProductToEdit(product)}>
+                            編輯
+                          </Button>
                           <LoadingButton
                             loading={publishing}
                             variant={!!publishedPostId ? 'text' : 'contained'}
@@ -230,6 +284,21 @@ export default function Index() {
         </Stack>
       </Box>
       {checked.join(', ')}
+      {productToEdit && (
+        <ProductFormDialog
+          open={true}
+          formData={productToEdit}
+          onClose={() => setProductToEdit(null)}
+          onSubmit={(data) => updateProduct(data)}
+        />
+      )}
+      {productsToPublish && (
+        <ProductPublisherDialog
+          open={true}
+          products={productsToPublish}
+          onClose={() => setProductsToPublish(null)}
+        />
+      )}
     </Layout>
   )
 }

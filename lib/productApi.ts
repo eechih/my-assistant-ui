@@ -1,4 +1,4 @@
-import BaseAPI from './baseApi'
+import BaseAPI, { Patch } from './baseApi'
 import { Product } from './models'
 
 export default class ProductAPI<T extends Product> extends BaseAPI {
@@ -44,6 +44,25 @@ export default class ProductAPI<T extends Product> extends BaseAPI {
       method: 'get',
     })
     return res.data
+  }
+
+  async patchProduct(props: {
+    productId: string
+    patches: Patch[]
+  }): Promise<T> {
+    console.log('patchProduct', props)
+    const { productId, patches } = props
+    try {
+      const res = await this.axiosInstance.request<T>({
+        url: `/products/${productId}`,
+        method: 'patch',
+        data: patches,
+      })
+      return res.data
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }
 
   async publishProduct(props: {
